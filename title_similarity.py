@@ -56,4 +56,4 @@ combined_df = pd.concat(category_dict.values(), ignore_index=True)
 # Save the combined DataFrame to a CSV file
 combined_df.to_csv('title_clusters.csv', index=False)
 
-print("Combined DataFrame saved to 'combined_clusters.csv'")
+print("Combined DataFrame saved to 'title_clusters.csv'")
