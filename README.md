@@ -2,7 +2,7 @@
 
 Predictive model on Amazon products from September 2023.
 
-Neural Net predicts item similarity
+K-means / vectorization predicts item similarity
 
 Linear Regression Predicts star ratings for each product
 
