@@ -45,13 +45,15 @@ category_dict = {category_id: group for category_id, group in grouped_by_categor
 num_clusters = 5
 
 # Apply K-Means clustering for each category
-print("vectorize + clustering")
+print("vectorize + kmeans clustering")
 for category_id, category_df in category_dict.items():
     print(category_id)
     perform_clustering(category_df, vectorizer, num_clusters)
 
-# # Display the results
-# for category_id, category_df in category_dict.items():
-#     print(f"Category ID: {category_id}")
-#     print(category_df[['title', 'cluster']])
-#     print("\n")
+# Combine the dictionary back into a single DataFrame
+combined_df = pd.concat(category_dict.values(), ignore_index=True)
+
+# Save the combined DataFrame to a CSV file
+combined_df.to_csv('title_clusters.csv', index=False)
+
+print("Combined DataFrame saved to 'combined_clusters.csv'")
