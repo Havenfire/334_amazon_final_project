@@ -30,6 +30,11 @@ def perform_clustering(category_df, vectorizer, num_clusters):
     kmeans = KMeans(n_clusters=num_clusters, n_init=2)
     category_df['cluster'] = kmeans.fit_predict(X)
 
+    # Combine category_id and cluster into a new column
+    category_df['category_cluster'] = category_df['category_id'].astype(str) + '_' + category_df['cluster'].astype(str)
+    category_df.drop('cluster', axis=1, inplace=True)
+
+
 # Load CSV into DataFrame
 df = load_and_preprocess_data('amazon_products.csv')
 
@@ -42,7 +47,7 @@ grouped_by_category = df.groupby('category_id')
 category_dict = {category_id: group for category_id, group in grouped_by_category}
 
 # Arbitrary number of clusters
-num_clusters = 5
+num_clusters = 10
 
 # Apply K-Means clustering for each category
 print("vectorize + kmeans clustering")
@@ -54,6 +59,6 @@ for category_id, category_df in category_dict.items():
 combined_df = pd.concat(category_dict.values(), ignore_index=True)
 
 # Save the combined DataFrame to a CSV file
-combined_df.to_csv('title_clusters.csv', index=False)
+combined_df.to_csv('title_clusters_output.csv', index=False)
 
 print("Combined DataFrame saved to 'title_clusters.csv'")
