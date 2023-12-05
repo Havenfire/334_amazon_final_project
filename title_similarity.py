@@ -1,5 +1,6 @@
 import pandas as pd
 from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import tqdm as tqdm
@@ -20,6 +21,12 @@ def load_and_preprocess_data(file_path):
     # Tokenize the titles into text
     print("tokenizing")
     df['tokens'] = df['title'].apply(word_tokenize)
+
+    # Porter stemming
+    print("stemming")
+    porter = PorterStemmer()
+    df['tokens'] = df['tokens'].apply(lambda x: [porter.stem(word) for word in x])
+
     df['text'] = df['tokens'].apply(lambda x: ' '.join(x))
 
     return df
@@ -57,6 +64,9 @@ for category_id, category_df in category_dict.items():
 
 # Combine the dictionary back into a single DataFrame
 combined_df = pd.concat(category_dict.values(), ignore_index=True)
+
+# Sort the DataFrame by 'category_cluster'
+combined_df.sort_values(by='category_cluster', inplace=True)
 
 # Save the combined DataFrame to a CSV file
 combined_df.to_csv('title_clusters_output.csv', index=False)
