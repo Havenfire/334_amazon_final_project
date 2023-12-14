@@ -2,13 +2,12 @@ import pandas as pd
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
-import tqdm as tqdm
+from gensim.models import LdaModel
+from gensim.corpora import Dictionary
 import re
 
-
 def load_and_preprocess_data(file_path):
-   # Loading DataFrame
+    # Loading DataFrame
     print("loading df")
     df = pd.read_csv(file_path)
 
@@ -31,44 +30,40 @@ def load_and_preprocess_data(file_path):
 
     return df
 
-
-def perform_clustering(category_df, vectorizer, num_clusters):
-    X = vectorizer.fit_transform(category_df['text'])
-    kmeans = KMeans(n_clusters=num_clusters, n_init=2)
-    category_df['cluster'] = kmeans.fit_predict(X)
-
-    # Combine category_id and cluster into a new column
-    category_df['category_cluster'] = category_df['category_id'].astype(str) + '_' + category_df['cluster'].astype(str)
-    category_df.drop('cluster', axis=1, inplace=True)
-
+def perform_topic_modeling(category_df, dictionary, lda_model):
+    corpus = [dictionary.doc2bow(text.split()) for text in category_df['text']]
+    category_df['topic'] = [max(lda_model[doc], key=lambda x: x[1])[0] for doc in corpus]
 
 # Load CSV into DataFrame
 df = load_and_preprocess_data('amazon_products.csv')
 
 # TF-IDF vectorization
 vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(df['text'])
 
-print("Grouping")
 # Organize categories into groups
 grouped_by_category = df.groupby('category_id')
 category_dict = {category_id: group for category_id, group in grouped_by_category}
 
-# Arbitrary number of clusters
-num_clusters = 10
+# Arbitrary number of topics
+num_topics = 10
 
-# Apply K-Means clustering for each category
-print("vectorize + kmeans clustering")
+# Apply LDA topic modeling for each category
+print("LDA topic modeling")
 for category_id, category_df in category_dict.items():
     print(category_id)
-    perform_clustering(category_df, vectorizer, num_clusters)
+    dictionary = Dictionary(category_df['tokens'])
+    corpus = [dictionary.doc2bow(text) for text in category_df['tokens']]
+    lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=10)
+    perform_topic_modeling(category_df, dictionary, lda_model)
 
 # Combine the dictionary back into a single DataFrame
 combined_df = pd.concat(category_dict.values(), ignore_index=True)
 
-# # Sort the DataFrame by 'category_cluster'
-# combined_df.sort_values(by='category_cluster', inplace=True)
+# Sort the DataFrame by 'topic'
+combined_df.sort_values(by='topic', inplace=True)
 
 # Save the combined DataFrame to a CSV file
-combined_df.to_csv('title_clusters_output_results.csv', index=False)
+combined_df.to_csv('title_topic_modeling_results.csv', index=False)
 
-print("Combined DataFrame saved to 'title_clusters_output_results.csv'")
+print("Combined DataFrame saved to 'title_topic_modeling_results.csv'")
